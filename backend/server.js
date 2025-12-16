@@ -5,6 +5,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const { authRoutes } = require("./routes/authRoutes");
+const { eventRoutes } = require("./routes/eventRoutes");
 
 const app = express();
 app.use(
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/user", authRoutes);
+app.use("/event", eventRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
