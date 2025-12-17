@@ -1,28 +1,29 @@
 const Event = require("../models/event");
 exports.createEvent = async (req, res, next) => {
   try {
-    const { title, description, dateTime, location, capacity, image } =
-      req.body;
-    if (
-      !title ||
-      !description ||
-      !dateTime ||
-      !location ||
-      !capacity ||
-      !image
-    ) {
+    const { title, description, dateTime, location, capacity } = req.body;
+
+    if (!title || !description || !dateTime || !location || !capacity) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
     }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required",
+      });
+    }
+
     const newEvent = new Event({
       title: title,
       description: description,
-      dataTime: dateTime,
+      dateTime: dateTime,
       location: location,
       capacity: capacity,
-      image: image,
+      image: req.file.filename,
       createdBy: req.user.userId,
     });
     await newEvent.save();
