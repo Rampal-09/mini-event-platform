@@ -19,7 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
-
+app.get("/", (req, res) => {
+  res.send("Backend running 🚀");
+});
 app.use("/user", authRoutes);
 app.use("/event", eventRoutes);
 
