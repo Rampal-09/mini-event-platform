@@ -5,6 +5,8 @@ node_modules
 # Backend
 backend/node_modules
 backend/.env
+backend/uploads/
+
 
 # Frontend
 frontend/node_modules

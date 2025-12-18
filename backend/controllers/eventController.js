@@ -39,15 +39,38 @@ exports.createEvent = async (req, res, next) => {
     });
   }
 };
-exports.getAllEvents = async (req, res, next) => {
+exports.getAllEvents = async (req, res) => {
   try {
-    const allEvents = await Event.find().populate("createdBy", "name email");
-    return res.status(200).json({
+    const userId = req.user?.userId;
+    console.log("Getting events for user:", userId);
+
+    const events = await Event.find().populate("createdBy", "name email");
+
+    const formattedEvents = events.map((event) => {
+      const attendees = event.attendees.map((id) => id.toString());
+      const isJoined = userId ? attendees.includes(userId) : false;
+      const isFull = attendees.length >= event.capacity;
+
+      console.log(`Event ${event._id}:`, {
+        isJoined,
+        isFull,
+        attendeesCount: attendees.length,
+      });
+
+      return {
+        ...event.toObject(),
+        isJoined,
+        isFull,
+      };
+    });
+
+    res.status(200).json({
       success: true,
-      data: allEvents,
+      data: formattedEvents,
     });
   } catch (err) {
-    return res.status(500).json({
+    console.error("Error fetching events:", err);
+    res.status(500).json({
       success: false,
       message: "Failed to fetch events",
     });
@@ -60,7 +83,7 @@ exports.editEvent = async (req, res, next) => {
     const userId = req.user.userId;
 
     const event = await Event.findById(EventId);
-    if (event) {
+    if (!event) {
       return res.status(404).json({
         success: false,
         message: "event not found",
@@ -78,7 +101,9 @@ exports.editEvent = async (req, res, next) => {
     event.dataTime = req.body.dateTime;
     event.location = req.body.location;
     event.capacity = req.body.capacity;
-    event.image = req.body.image;
+    if (req.file) {
+      event.image = req.file.filename;
+    }
 
     await event.save();
     res.status(200).json({
@@ -98,7 +123,7 @@ exports.deleteEvent = async (req, res, next) => {
   try {
     const eventId = req.params.id;
 
-    const event = await Event.findById(event);
+    const event = await Event.findById(eventId);
 
     if (!event) {
       return res.status(404).json({
@@ -127,33 +152,46 @@ exports.deleteEvent = async (req, res, next) => {
   }
 };
 
-exports.joinEvent = async (req, res, next) => {
+exports.joinEvent = async (req, res) => {
   try {
-    const eventId = req.params.id;
     const userId = req.user.userId;
+    const eventId = req.params.id;
 
-    const event = await Event.findByIdAndUpdate(
+    console.log("Join event:", { userId, eventId });
+
+    const event = await Event.findOneAndUpdate(
       {
         _id: eventId,
-        attendees: { $ne: "userId" },
-        $expr: { $lt: [{ $size: "attendees" }, "$capacity"] },
+        attendees: { $ne: userId },
+        $expr: { $lt: [{ $size: "$attendees" }, "$capacity"] },
       },
-      { $addToset: { attendees: userId } },
+      { $addToSet: { attendees: userId } },
       { new: true }
     );
+
     if (!event) {
+      console.log("Cannot join: Event is full or already joined");
       return res.status(400).json({
         success: false,
         message: "Event is full or already joined",
       });
     }
 
+    const attendees = event.attendees.map((id) => id.toString());
+    const responseData = {
+      ...event.toObject(),
+      isJoined: true,
+      isFull: attendees.length >= event.capacity,
+    };
+
+    console.log("Join successful:", responseData);
+
     res.status(200).json({
       success: true,
-      message: "Successfully joined event",
-      event,
+      event: responseData,
     });
   } catch (err) {
+    console.error("Error joining event:", err);
     res.status(500).json({
       success: false,
       message: "Failed to join event",
@@ -166,20 +204,36 @@ exports.leaveEvent = async (req, res) => {
     const userId = req.user.userId;
     const eventId = req.params.id;
 
+    console.log("Leave event:", { userId, eventId });
+
     const event = await Event.findByIdAndUpdate(
       eventId,
-      {
-        $pull: { attendees: userId },
-      },
+      { $pull: { attendees: userId } },
       { new: true }
     );
 
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const attendees = event.attendees.map((id) => id.toString());
+    const responseData = {
+      ...event.toObject(),
+      isJoined: false,
+      isFull: attendees.length >= event.capacity,
+    };
+
+    console.log("Leave successful:", responseData);
+
     res.status(200).json({
       success: true,
-      message: "Left event successfully",
-      event,
+      event: responseData,
     });
   } catch (err) {
+    console.error("Error leaving event:", err);
     res.status(500).json({
       success: false,
       message: "Failed to leave event",

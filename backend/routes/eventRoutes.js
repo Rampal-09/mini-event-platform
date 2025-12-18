@@ -11,7 +11,12 @@ eventRoutes.post(
   eventControllers.createEvent
 );
 eventRoutes.get("/all", eventControllers.getAllEvents);
-eventRoutes.put("/:id/edit", auth, eventControllers.editEvent);
+eventRoutes.put(
+  "/:id/edit",
+  auth,
+  upload.single("image"),
+  eventControllers.editEvent
+);
 eventRoutes.delete("/:id/delete", auth, eventControllers.deleteEvent);
 eventRoutes.post("/:id/join", auth, eventControllers.joinEvent);
 eventRoutes.post("/:id/leave", auth, eventControllers.leaveEvent);
