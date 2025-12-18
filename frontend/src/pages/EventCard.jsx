@@ -102,7 +102,9 @@ const EventCard = ({
         <>
           <div className={styles.imageContainer}>
             <img
-              src={`http://localhost:5000/uploads/${event.image}`}
+              src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${
+                event.image
+              }`}
               alt={event.title}
               className={styles.image}
             />
