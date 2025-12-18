@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import styles from "./EventCard.module.css";
 
 const EventCard = ({
   event,
@@ -43,74 +44,92 @@ const EventCard = ({
   });
 
   return (
-    <div style={{ border: "1px solid gray", padding: "10px", margin: "10px" }}>
+    <div className={styles.card}>
       {isEditing ? (
         <>
-          <input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="Title"
-            style={{ display: "block", width: "100%", marginBottom: "5px" }}
-          />
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Description"
-            style={{ display: "block", width: "100%", marginBottom: "5px" }}
-          />
-          <input
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            placeholder="Location"
-            style={{ display: "block", width: "100%", marginBottom: "5px" }}
-          />
-          <input
-            type="number"
-            value={form.capacity}
-            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-            placeholder="Capacity"
-            style={{ display: "block", width: "100%", marginBottom: "5px" }}
-          />
+          <div className={styles.formGroup}>
+            <input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Title"
+              className={styles.input}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              placeholder="Description"
+              className={styles.textarea}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <input
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              placeholder="Location"
+              className={styles.input}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <input
+              type="number"
+              value={form.capacity}
+              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+              placeholder="Capacity"
+              className={styles.input}
+            />
+          </div>
 
-          <button onClick={handleSave}>Update</button>
-          <button onClick={() => onEdit(null)}>Cancel</button>
+          <div className={styles.buttonGroup}>
+            <button
+              onClick={handleSave}
+              className={`${styles.button} ${styles.joinButton}`}
+            >
+              Update
+            </button>
+            <button
+              onClick={() => onEdit(null)}
+              className={`${styles.button} ${styles.deleteButton}`}
+            >
+              Cancel
+            </button>
+          </div>
         </>
       ) : (
         <>
-          <div
-            style={{
-              border: "1px solid #ccc",
-              margin: "10px",
-              padding: "10px",
-            }}
-          >
+          <div className={styles.imageContainer}>
             <img
               src={`http://localhost:5000/uploads/${event.image}`}
               alt={event.title}
-              width="200"
+              className={styles.image}
             />
           </div>
-          <h3>{event.title}</h3>
-          <p>{event.description}</p>
-          <p> {event.location}</p>
-          <p> Capacity: {event.capacity}</p>
+          <h3 className={styles.title}>{event.title}</h3>
+          <p className={styles.description}>{event.description}</p>
+          <p className={styles.info}> {event.location}</p>
+          <p className={styles.info}> Capacity: {event.capacity}</p>
 
-          <div style={{ marginTop: "10px" }}>
-            <button onClick={onEdit} style={{ marginRight: "5px" }}>
+          <div className={styles.buttonGroup}>
+            <button
+              onClick={onEdit}
+              className={`${styles.button} ${styles.editButton}`}
+            >
               Edit
             </button>
-            <button onClick={handleDelete} style={{ marginRight: "5px" }}>
+            <button
+              onClick={handleDelete}
+              className={`${styles.button} ${styles.deleteButton}`}
+            >
               Delete
             </button>
 
             {!isJoined && !isFull && (
               <button
                 onClick={() => onJoin(event._id)}
-                style={{
-                  backgroundColor: "green",
-                  color: "white",
-                  marginRight: "5px",
-                }}
+                className={`${styles.button} ${styles.joinButton}`}
               >
                 Join Event
               </button>
@@ -119,18 +138,14 @@ const EventCard = ({
             {isJoined && (
               <button
                 onClick={() => onLeave(event._id)}
-                style={{
-                  backgroundColor: "red",
-                  color: "white",
-                  marginRight: "5px",
-                }}
+                className={`${styles.button} ${styles.leaveButton}`}
               >
                 Leave Event
               </button>
             )}
 
             {isFull && !isJoined && (
-              <p style={{ color: "red", fontWeight: "bold" }}>Event Full</p>
+              <p className={styles.fullMessage}>❌ Event Full</p>
             )}
           </div>
         </>

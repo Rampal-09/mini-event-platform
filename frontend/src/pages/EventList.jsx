@@ -7,7 +7,7 @@ import {
   leaveEvent,
 } from "../api/eventApi";
 import EventCard from "./EventCard";
-
+import "./EventList.module.css";
 const EventList = () => {
   const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -31,7 +31,6 @@ const EventList = () => {
   const handleDeleteEvent = async (deleteId) => {
     try {
       await deleteEvent(deleteId);
-
       setEvents((prevEvents) =>
         prevEvents.filter((event) => event._id !== deleteId)
       );
@@ -45,14 +44,11 @@ const EventList = () => {
   const handleUpdateEvent = async (updatedEventData) => {
     try {
       const data = await editEvent(editingEvent._id, updatedEventData);
-      console.log("Update response:", data);
-
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event._id === editingEvent._id ? data.data : event
         )
       );
-
       setEditingEvent(null);
       setError(null);
     } catch (err) {
@@ -64,15 +60,8 @@ const EventList = () => {
   const handleJoinEvent = async (eventId) => {
     try {
       const res = await joinEvent(eventId);
-      console.log("Join response:", res);
-
-      // Backend returns: { data: { success: true, event: {...} } }
-      // Axios wraps it again, so we get: { data: { data: { success: true, event: {...} } } }
-      // OR Backend might return: { success: true, event: {...} }
-      // Axios wraps it, so we get: { data: { success: true, event: {...} } }
 
       if (res?.data?.event) {
-        // If response structure is { data: { success: true, event: {...} } }
         setEvents((prevEvents) =>
           prevEvents.map((event) =>
             event._id === eventId ? res.data.event : event
@@ -80,7 +69,6 @@ const EventList = () => {
         );
         setError(null);
       } else if (res?.event) {
-        // If response structure is { success: true, event: {...} }
         setEvents((prevEvents) =>
           prevEvents.map((event) => (event._id === eventId ? res.event : event))
         );
@@ -88,16 +76,13 @@ const EventList = () => {
       }
     } catch (err) {
       console.log("Join error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Failed to join event";
-      setError(errorMessage);
+      setError(err.response?.data?.message || "Failed to join event");
     }
   };
 
   const handleLeaveEvent = async (eventId) => {
     try {
       const res = await leaveEvent(eventId);
-      console.log("Leave response:", res);
 
       if (res?.data?.event) {
         setEvents((prevEvents) =>
@@ -114,43 +99,34 @@ const EventList = () => {
       }
     } catch (err) {
       console.log("Leave error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Failed to leave event";
-      setError(errorMessage);
+      setError(err.response?.data?.message || "Failed to leave event");
     }
   };
 
   return (
-    <div>
-      <h2>Events</h2>
+    <div className="container">
+      <h2 className="title">Events</h2>
 
-      {error && (
-        <div
-          style={{
-            color: "red",
-            padding: "10px",
-            marginBottom: "10px",
-            border: "1px solid red",
-            borderRadius: "4px",
-            backgroundColor: "#ffeeee",
-          }}
-        >
-          {error}
+      {error && <div className="errorMessage">{error}</div>}
+
+      {events.length > 0 ? (
+        <div className="eventGrid">
+          {events.map((event) => (
+            <EventCard
+              key={event._id}
+              event={event}
+              onDelete={handleDeleteEvent}
+              onEdit={() => setEditingEvent(event)}
+              onUpdate={handleUpdateEvent}
+              onJoin={handleJoinEvent}
+              onLeave={handleLeaveEvent}
+              isEditing={editingEvent?._id === event._id}
+            />
+          ))}
         </div>
+      ) : (
+        <div className="noEvents">No events available</div>
       )}
-
-      {events.map((event) => (
-        <EventCard
-          key={event._id}
-          event={event}
-          onDelete={handleDeleteEvent}
-          onEdit={() => setEditingEvent(event)}
-          onUpdate={handleUpdateEvent}
-          onJoin={handleJoinEvent}
-          onLeave={handleLeaveEvent}
-          isEditing={editingEvent?._id === event._id}
-        />
-      ))}
     </div>
   );
 };
